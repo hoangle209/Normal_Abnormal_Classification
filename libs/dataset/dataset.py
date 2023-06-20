@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 import cv2 as cv
 import glob
 
-from utils.image import color_aug
+from ..utils.image import color_aug
 
 
 class GenericDataset(torch.utils.data.Dataset):
@@ -50,9 +50,9 @@ class GenericDataset(torch.utils.data.Dataset):
         self.label_len = len(self.label_encoder)
         self.opt = opt
 
-        self.num_rgb = 3 if num_RGB is not None else num_RGB
-        self.num_optiF = 2 if num_OptiF is not None else num_OptiF
-        self.num_heat = 1 if num_Heat is not None else num_Heat
+        self.num_rgb = 3 if num_RGB is None else num_RGB
+        self.num_optiF = 2 if num_OptiF is None else num_OptiF
+        self.num_heat = 1 if num_Heat is None else num_Heat
         self._data_rng = np.random.RandomState(123)
 
 
@@ -96,7 +96,7 @@ class GenericDataset(torch.utils.data.Dataset):
 
         concat_img = concat_img / 255.
         concat_img = (concat_img - self.mean[None, ...]) / self.std[None, ...]
-        concat_img = concat_img.transpose(0, 3, 1, 2)
+        concat_img = concat_img.transpose(3, 0, 1, 2) # c x nums x h x w
         
        # print('----concat shape', concat_img.shape)
         return concat_img
@@ -171,6 +171,7 @@ class GenericDataset(torch.utils.data.Dataset):
 
         for idx, p in enumerate(img_list):
             img = cv.imread(p)
+            img_type = os.path.split(img)[-1]
             if flip:
                 img = self._flipV(img)
             
@@ -180,7 +181,7 @@ class GenericDataset(torch.utils.data.Dataset):
                 rot_mat = cv.getRotationMatrix2D((new_w/2, new_h/2), rot, scale)
                 img = cv.warpAffine(img, rot_mat, (int(new_w), int(new_h))) 
 
-            if color_aug and idx < self.num_rgb:
+            if color_aug and img_type.startswith('rgb'):
                 color_aug(self._data_rng, img, self._eig_val, self._eig_vec)
 
             img = cv.resize(img, (input_w, input_h), interpolation=cv.INTER_AREA)

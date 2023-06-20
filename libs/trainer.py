@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 from .losses import BCELoss, CELoss
-from ..utils.utils import AverageMeter
+from .utils.utils import AverageMeter
 
 from progress.bar import Bar
 
@@ -10,7 +10,11 @@ class ModelWithLoss(torch.nn.Module):
     def __init__(self, model, opt):
         super().__init__()
         self.model = model
-        self.crit_label = CELoss(label_smoothing=1./opt.batch_size)
+        if opt.loss == 'BCE':
+            self.crit_label = BCELoss()
+        elif opt.loss == 'CE':
+            label_smoothing = 1./opt.batch_size if opt.label_smoothing else 0.0
+        self.crit_label = CELoss(label_smoothing=label_smoothing)
         self.opt = opt
 
 

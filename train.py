@@ -1,19 +1,59 @@
 import torch
 import torch.nn as nn
 
-from models.trainer import Trainer
-from dataset.dataset import GenericDataset
-from models.models import Classify
-from models.utils import load_model, save_model
+from libs.trainer import Trainer
+from libs.dataset.dataset import GenericDataset
+from libs.models import Classify
+from libs.backbone.yolov5 import Yolov5Backbone
+from libs.backbone.resnet import ResNet
+from libs.attention_layer import cbam, custom
+from libs.backbone.utils import load_model, save_model
 from opts import opts
 
 import os
 
+def get_arch(opt, **kwargs):
+    if opt.arch == 'Yolov5':
+        path = kwargs.get('yolo_v5_weight',None)
+        if path is None:
+            arch_rgb = torch.hub.load("ultralytics/yolov5", "yolov5x")
+            arch_flow = torch.hub.load("ultralytics/yolov5", "yolov5x")
+        else:
+            arch_rgb = torch.hub.load("ultralytics/yolov5", "custom", path=path)
+            arch_flow = torch.hub.load("ultralytics/yolov5", "custom", path=path)
+        
+        arch_rgb = Yolov5Backbone(arch_rgb)
+        arch_flow = Yolov5Backbone(arch_flow)
 
-def get_model(opt):
-    if opt.model == 'YoloAtt':
-        nc = 2 if opt.loss == 'CE' else 1
-        model = Classify(nc=nc)
+    elif opt.arch == 'Resnet':
+        arch_rgb = ResNet(opt.depth)
+        arch_flow = ResNet(opt.depth)
+
+    else:
+        raise NotImplementedError
+    
+    arch = [arch_rgb, arch_flow] 
+    return arch
+
+
+def get_att_layer(opt, **kwargs):
+    if opt.att == 'cbam':
+        att_layer = cbam.CBAM(c1=2*kwargs['ch'])
+    elif opt.att == 'custom':
+        att_layer = custom.CustomAttLayer(kwargs['ch'], kwargs['ch'])
+    else:
+        raise NotImplementedError
+
+    return att_layer
+
+
+def get_model(opt, **kwargs):
+    arch = get_arch(opt, **kwargs)
+    # ch = arch[0].ch
+    att_layer = get_att_layer(opt, ch=512, **kwargs)
+
+    nc = 2 if opt.loss == 'CE' else 1
+    model = Classify(arch=arch, att_layer=att_layer, nums_in=kwargs['nums_in'], nc=nc)
     
     return model
 
@@ -48,7 +88,7 @@ def main(opt):
 
     # module_list = nn.ModuleList([])
 
-    model = get_model(opt)
+    model = get_model(opt, nums_in=15) # TODO
     optimizer = get_optimizer(opt, model)
     start_epoch = 0
     if opt.load_model != '' and opt.resume:
@@ -75,7 +115,8 @@ def main(opt):
 if __name__ == '__main__':
     opt = opts().parse()
     main(opt)
-        
+    
+   
 
 
 
