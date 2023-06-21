@@ -110,6 +110,12 @@ def main(opt):
         
         save_model(os.path.join(opt.save_path, 'model_last.pth'), epoch, model, optimizer) # save model last
 
+        if epoch in opt.lr_step:
+            lr = opt.lr * (0.1 ** (opt.lr_step.index(epoch) + 1))
+            print('Drop LR to', lr)
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = lr
+
 
 if __name__ == '__main__':
     opt = opts().parse()

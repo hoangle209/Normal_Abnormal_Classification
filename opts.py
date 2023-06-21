@@ -34,6 +34,8 @@ class opts():
         self.parser.add_argument('--input-h', type=int, default=416)
         self.parser.add_argument('--val', type=int, default=-1,
                                  help='validation period')
+        self.parser.add_argument('--save-point', type=str, default='',
+                                 help='save checkpoints')
         
         # dataset
         self.parser.add_argument('--path', type=str, default='')
@@ -51,6 +53,7 @@ class opts():
     def parse(self):
         opt = self.parser.parse_args()
 
+        # modle_step
         if opt.save_path == '':
             _path = os.path.dirname(__file__)
             opt.save_path = os.path.join(_path, 'exp')
@@ -58,8 +61,23 @@ class opts():
             if not os.path.isdir(opt.save_path):
                 os.mkdir(opt.save_path)
         
+        # model_name
         if opt.arch != 'Yolov5':
-            opt.model_name = opt.arch + str(opt.depth)
+            opt.model_name = f'{opt.arch}-{opt.depth}_{opt.att}'
+        else:
+            opt.model_name = f'{opt.arch}_{opt.att}'
+
+        # lr_step
+        if opt.lr_step != '':
+            opt.lr_step = [int(s) for s in opt.lr_step.split(',')]
+        else:
+            opt.lr_step = []
+
+        #save checkpoint
+        if opt.save_point != '':
+            opt.save_point = [int(s) for s in opt.save_point.split(',')]
+        else:
+            opt.save_point = []
 
         return opt
 

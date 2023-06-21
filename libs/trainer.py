@@ -68,6 +68,7 @@ class Trainer():
                     state[k] = v.to(device=device, non_blocking=True)
 
     def run_epoch(self, phase, epoch, dataset):
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model_with_loss = self.model_with_loss
         if phase == 'train':
             model_with_loss.train()
@@ -84,6 +85,8 @@ class Trainer():
             TP = 0
 
         for idx, batch in enumerate(dataset):
+            for k in batch:
+                batch[k] = batch[k].to(device, non_blocking=True)
             out, loss, loss_stat = self.model_with_loss(batch)
             
             if phase == 'train':
@@ -99,8 +102,8 @@ class Trainer():
             Bar.suffix = f'[{phase}][{epoch}][{idx}/{max_iter}]|Tot: {bar.elapsed_td:} |ETA: {bar.eta_td:} '
 
             if phase == 'val':
-                pred = torch.argmax(out).cuda().int()
-                gt = torch.argmax(batch['label']).cuda().int()
+                pred = torch.argmax(out).cpu().int()
+                gt = torch.argmax(batch['label']).cpu().int()
                 
                 if pred == gt:
                     TP += 1
