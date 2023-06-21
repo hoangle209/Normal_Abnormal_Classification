@@ -24,12 +24,11 @@ def get_arch(opt, **kwargs):
         
         arch_rgb = Yolov5Backbone(arch_rgb)
         arch_flow = Yolov5Backbone(arch_flow)
-
     elif opt.arch == 'Resnet':
         arch_rgb = ResNet(opt.depth)
         arch_flow = ResNet(opt.depth)
-
     else:
+        print(opt.arch)
         raise NotImplementedError
     
     arch = [arch_rgb, arch_flow] 
@@ -38,7 +37,7 @@ def get_arch(opt, **kwargs):
 
 def get_att_layer(opt, **kwargs):
     if opt.att == 'cbam':
-        att_layer = cbam.CBAM(c1=2*kwargs['ch'])
+        att_layer = cbam.CBAM(c1=kwargs['ch'])
     elif opt.att == 'custom':
         att_layer = custom.CustomAttLayer(kwargs['ch'], kwargs['ch'])
     else:
@@ -49,8 +48,8 @@ def get_att_layer(opt, **kwargs):
 
 def get_model(opt, **kwargs):
     arch = get_arch(opt, **kwargs)
-    # ch = arch[0].ch
-    att_layer = get_att_layer(opt, ch=512, **kwargs)
+    ch = arch[0].ch
+    att_layer = get_att_layer(opt, ch=2*ch, **kwargs)
 
     nc = 2 if opt.loss == 'CE' else 1
     model = Classify(arch=arch, att_layer=att_layer, nums_in=kwargs['nums_in'], nc=nc)
@@ -114,8 +113,7 @@ def main(opt):
 
 if __name__ == '__main__':
     opt = opts().parse()
-    main(opt)
-    
+    main(opt) 
    
 
 

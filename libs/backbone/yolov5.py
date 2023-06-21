@@ -20,7 +20,7 @@ class Yolov5Backbone(nn.Module):
                 p.requires_grad = True
 
         m = model.model[-1]
-        self.ch = m.conv.out_channels if hasattr(m, 'conv') else m.cv2.conv.out_channels  # ch into module
+        self.ch = m.conv.out_channels if hasattr(m, 'conv') else m.cv2.conv.out_channels  # ch out module
         self.stride = model.stride
 
         model = [l for l in model.model.children()]

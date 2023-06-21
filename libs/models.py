@@ -19,8 +19,8 @@ class ClassificationModel(nn.Module):
 
         self.ch = self.rgb_base.ch
 
-        self.conv_rgb = nn.Conv2d(self.ch*self.nums_rgb, 512, kernel_size=1, bias=False)
-        self.conv_flow = nn.Conv2d(self.ch*self.nums_flow, 512, kernel_size=1, bias=False)
+        self.conv_rgb = nn.Conv2d(self.ch*self.nums_rgb, self.ch, kernel_size=1, bias=False)
+        self.conv_flow = nn.Conv2d(self.ch*self.nums_flow, self.ch, kernel_size=1, bias=False)
     
     def forward(self, x):
         '''
@@ -51,7 +51,7 @@ class Classify(nn.Module):
         self.classify_model = ClassificationModel(arch=arch, att_layer=att_layer, nums_in=nums_in)
         self.ch = self.classify_model.ch
         self.pool_1 = nn.AdaptiveAvgPool2d(1)
-        self.linear_1 = nn.Linear(c1, self.ch)
+        self.linear_1 = nn.Linear(2*self.ch, nc)
 
     def forward(self, x):
         x = self.classify_model(x)

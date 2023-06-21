@@ -47,7 +47,7 @@ class GenericDataset(torch.utils.data.Dataset):
         if path is not None:
             print(f'==> initializing {split} data from {path}')
         
-        self.label_len = len(self.label_encoder)
+        # self.label_len = len(self.label_encoder)
         self.opt = opt
 
         self.num_rgb = 3 if num_RGB is None else num_RGB

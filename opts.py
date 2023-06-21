@@ -12,7 +12,7 @@ class opts():
         # model
         self.parser.add_argument('--arch', type=str, default='Yolov5', 
                                  help='model architect, Yolov5 | Resnet | Resnet3d')
-        self.parser.add_argument('--depth', type=str,
+        self.parser.add_argument('--depth', type=int,
                                  help='model depth')
         self.parser.add_argument('--att', type=str, default='cbam',
                                  help='attention layer module, cbam | custom')
@@ -59,7 +59,7 @@ class opts():
                 os.mkdir(opt.save_path)
         
         if opt.arch != 'Yolov5':
-            opt.arch = opt.arch + opt.depth
+            opt.model_name = opt.arch + str(opt.depth)
 
         return opt
 
