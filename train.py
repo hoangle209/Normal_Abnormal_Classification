@@ -13,20 +13,20 @@ from opts import opts
 import os
 
 def get_arch(opt, **kwargs):
-    if opt.arch == 'Yolov5':
+    if opt.arch == 'yolov5':
         path = kwargs.get('yolo_v5_weight',None)
         if path is None:
-            arch_rgb = torch.hub.load("ultralytics/yolov5", "yolov5x")
-            arch_flow = torch.hub.load("ultralytics/yolov5", "yolov5x")
+            arch_rgb = torch.hub.load("ultralytics/yolov5", f"{opt.arch}{opt.depth}")
+            arch_flow = torch.hub.load("ultralytics/yolov5", f"{opt.arch}{opt.depth}")
         else:
             arch_rgb = torch.hub.load("ultralytics/yolov5", "custom", path=path)
             arch_flow = torch.hub.load("ultralytics/yolov5", "custom", path=path)
         
         arch_rgb = Yolov5Backbone(arch_rgb)
         arch_flow = Yolov5Backbone(arch_flow)
-    elif opt.arch == 'Resnet':
-        arch_rgb = ResNet(opt.depth)
-        arch_flow = ResNet(opt.depth)
+    elif opt.arch == 'resnet':
+        arch_rgb = ResNet(int(opt.depth))
+        arch_flow = ResNet(int(opt.depth))
     else:
         print(opt.arch)
         raise NotImplementedError
@@ -104,11 +104,11 @@ def main(opt):
     for epoch in range(start_epoch+1, opt.num_epochs+1):
         ret, _ = trainer.train(epoch, train_loader)
         
-        if opt.val > 0 and epoch % opt.val:
+        if opt.val > 0 and epoch % opt.val == 0:
             with torch.no_grad():
                 trainer.val(epoch, val_loader)
         
-        save_model(os.path.join(opt.save_path, 'model_last.pth'), epoch, model, optimizer) # save model last
+        save_model(os.path.join(opt.save_path, f'model_{opt.model_name}_last.pth'), epoch, model, optimizer) # save model last
 
         if epoch in opt.lr_step:
             lr = opt.lr * (0.1 ** (opt.lr_step.index(epoch) + 1))
@@ -120,7 +120,3 @@ def main(opt):
 if __name__ == '__main__':
     opt = opts().parse()
     main(opt) 
-   
-
-
-

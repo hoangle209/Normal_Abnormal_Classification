@@ -26,10 +26,10 @@ class BCELoss(nn.Module):
 class CELoss(nn.Module):
     def __init__(self, label_smoothing=0.0):
         super().__init__()
-        self.ce = F.cross_entropy(label_smoothing=label_smoothing) 
+        self.ce = nn.CrossEntropyLoss(label_smoothing=label_smoothing) 
     
     def forward(self, out, batch):
-        b = out.szie(0)
+        b = out.size(0)
         loss = self.ce(out, batch)
 
         return loss.sum() / b

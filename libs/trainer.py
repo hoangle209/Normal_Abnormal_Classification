@@ -24,14 +24,13 @@ class ModelWithLoss(torch.nn.Module):
         return out
 
     def _softmax_output(self, out):
-        out = nn.functional.softmax(out, axis=-1)
+        out = nn.functional.softmax(out, dim=-1)
 
         return out
     
 
     def forward(self, batch):
         out = self.model(batch['image'])
-
         if self.opt.loss == 'CE':
             out = self._softmax_output(out)
         elif self.opt.loss == 'BCE':
@@ -86,7 +85,8 @@ class Trainer():
 
         for idx, batch in enumerate(dataset):
             for k in batch:
-                batch[k] = batch[k].to(device, non_blocking=True)
+                if k in ['image', 'label']:
+                    batch[k] = batch[k].to(device, non_blocking=True)
             out, loss, loss_stat = self.model_with_loss(batch)
             
             if phase == 'train':
@@ -100,6 +100,9 @@ class Trainer():
                 )
                 Bar.suffix = Bar.suffix + f'|{l} {avg_loss_stats[l].avg:.4f} '
             Bar.suffix = f'[{phase}][{epoch}][{idx}/{max_iter}]|Tot: {bar.elapsed_td:} |ETA: {bar.eta_td:} '
+
+            for k in avg_loss_stats:
+                Bar.suffix = Bar.suffix + f'|{k} {avg_loss_stats[k].avg}'
 
             if phase == 'val':
                 pred = torch.argmax(out).cpu().int()

@@ -32,8 +32,8 @@ class GenericDataset(torch.utils.data.Dataset):
     }
 
     label_encoder_ce = {
-        'Abnormal': [1., 0.],
-        'Normal'  : [0., 1.]
+        'Abnormal': np.array([1., 0.], dtype=np.float32),
+        'Normal'  : np.array([0., 1.], dtype=np.float32)
     }
 
     def __init__(self, path=None, opt=None, num_RGB=None, num_OptiF=None, num_Heat=None, split='train'):
@@ -86,13 +86,13 @@ class GenericDataset(torch.utils.data.Dataset):
     
     def load_input(self, sub_folder_path, opt):
         img_list, label, img_infor = self.load_imgs_and_label(sub_folder_path)
-        concat_img = self._concat_input(img_list)
+        concat_img = self._concat_input(img_list, opt)
 
         return concat_img, label, img_infor
 
 
-    def _concat_input(self, img_list):
-        concat_img = self._augment(img_list)
+    def _concat_input(self, img_list, opt):
+        concat_img = self._augment(img_list, opt=opt)
 
         concat_img = concat_img / 255.
         concat_img = (concat_img - self.mean[None, ...]) / self.std[None, ...]
@@ -165,25 +165,25 @@ class GenericDataset(torch.utils.data.Dataset):
         if self.split == 'train':
             flip = np.random.rand() < opt.flip
             rotate = np.random.rand() < opt.rotate
-            color_aug = np.random.rand() < opt.color_aug
+            aug_color = np.random.rand() < opt.color_aug
         elif self.split == 'val':
-            flip, rotate, color_aug = False, False, False
+            flip, rotate, aug_color = False, False, False
 
         for idx, p in enumerate(img_list):
             img = cv.imread(p)
-            img_type = os.path.split(img)[-1]
+            img_type = os.path.split(p)[-1]
+
             if flip:
                 img = self._flipV(img)
-            
             if rotate:
                 h, w, _ = img.shape
                 new_w, new_h = self._new_rotated_wh(rot, w, h)
                 rot_mat = cv.getRotationMatrix2D((new_w/2, new_h/2), rot, scale)
                 img = cv.warpAffine(img, rot_mat, (int(new_w), int(new_h))) 
-
-            if color_aug and img_type.startswith('rgb'):
+            if aug_color and img_type.startswith('rgb'):
+                img = np.float32(img)
                 color_aug(self._data_rng, img, self._eig_val, self._eig_vec)
-
+            
             img = cv.resize(img, (input_w, input_h), interpolation=cv.INTER_AREA)
             concat_img[idx] = img
 

@@ -10,9 +10,9 @@ class opts():
         self.parser = argparse.ArgumentParser()
         
         # model
-        self.parser.add_argument('--arch', type=str, default='Yolov5', 
-                                 help='model architect, Yolov5 | Resnet | Resnet3d')
-        self.parser.add_argument('--depth', type=int,
+        self.parser.add_argument('--arch', type=str, default='yolov5', 
+                                 help='model architect, yolov5 | resnet | resnet3d')
+        self.parser.add_argument('--depth', type=str,
                                  help='model depth')
         self.parser.add_argument('--att', type=str, default='cbam',
                                  help='attention layer module, cbam | custom')
@@ -39,7 +39,7 @@ class opts():
         
         # dataset
         self.parser.add_argument('--path', type=str, default='')
-        self.parser.add_argument('--val_path', type=str, default='')
+        self.parser.add_argument('--val-path', type=str, default='')
         self.parser.add_argument('--flip', type=float, default=0.5,
                                  help='probability to vertical flip')
         self.parser.add_argument('--rotate', type=float, default=0.3,
@@ -53,7 +53,7 @@ class opts():
     def parse(self):
         opt = self.parser.parse_args()
 
-        # modle_step
+        # model_step
         if opt.save_path == '':
             _path = os.path.dirname(__file__)
             opt.save_path = os.path.join(_path, 'exp')
@@ -65,7 +65,7 @@ class opts():
         if opt.arch != 'Yolov5':
             opt.model_name = f'{opt.arch}-{opt.depth}_{opt.att}'
         else:
-            opt.model_name = f'{opt.arch}_{opt.att}'
+            opt.model_name = f'{opt.arch}{opt.depth}_{opt.att}'
 
         # lr_step
         if opt.lr_step != '':

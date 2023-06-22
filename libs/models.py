@@ -56,19 +56,7 @@ class Classify(nn.Module):
     def forward(self, x):
         x = self.classify_model(x)
         x = self.pool_1(x)
-        x = x.squeeze()
+        x = x.view(x.size(0), -1)
         x = self.linear_1(x)
 
         return x
-    
-
-
-        
-
-
-
-
-
-
-
-
