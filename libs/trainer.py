@@ -114,7 +114,7 @@ class Trainer():
         bar.finish()
 
         if phase == 'val':
-            print(f'\nValid Precision epoch: [{epoch}]: {TP/max_iter}')
+            print(f'Valid Precision epoch: [{epoch}]: {TP/max_iter}\n')
 
         ret = {k: v.avg for k, v in avg_loss_stats.items()}
         

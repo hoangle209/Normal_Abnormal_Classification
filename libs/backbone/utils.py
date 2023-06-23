@@ -1,8 +1,12 @@
 '''
-    From TraDes: https://github.com/JialianW/TraDeS
+    partial of this code is referenced from TraDes: https://github.com/JialianW/TraDeS
 '''
-
 import torch
+from .yolov5 import Yolov5Backbone
+from .resnet import ResNet
+from ..attention_layer import cbam, custom
+from ..models import Classify
+
 
 def load_model(model, model_path, opt, optimizer=None):
     start_epoch = 0
@@ -57,3 +61,48 @@ def save_model(path, epoch, model, optimizer=None):
     if optimizer is not None:
         data['optimizer'] = optimizer.state_dict()
     torch.save(data, path)
+
+
+def get_arch(opt, **kwargs):
+    if opt.arch == 'yolov5':
+        path = kwargs.get('yolo_v5_weight', None)
+        if path is None:
+            arch_rgb = torch.hub.load("ultralytics/yolov5", f"{opt.arch}{opt.depth}")
+            arch_flow = torch.hub.load("ultralytics/yolov5", f"{opt.arch}{opt.depth}")
+        else:
+            arch_rgb = torch.hub.load("ultralytics/yolov5", "custom", path=path)
+            arch_flow = torch.hub.load("ultralytics/yolov5", "custom", path=path)
+        
+        arch_rgb = Yolov5Backbone(arch_rgb)
+        arch_flow = Yolov5Backbone(arch_flow)
+    elif opt.arch == 'resnet':
+        arch_rgb = ResNet(int(opt.depth))
+        arch_flow = ResNet(int(opt.depth))
+    else:
+        print(opt.arch)
+        raise NotImplementedError
+    
+    arch = [arch_rgb, arch_flow] 
+    return arch
+
+
+def get_att_layer(opt, **kwargs):
+    if opt.att == 'cbam':
+        att_layer = cbam.CBAM(c1=kwargs['ch'])
+    elif opt.att == 'custom':
+        att_layer = custom.CustomAttLayer(kwargs['ch'], kwargs['ch'])
+    else:
+        raise NotImplementedError
+
+    return att_layer
+
+
+def create_model(opt, **kwargs):
+    arch = get_arch(opt, **kwargs)
+    ch = arch[0].ch
+    att_layer = get_att_layer(opt, ch=2*ch, **kwargs)
+
+    nc = 2 if opt.loss == 'CE' else 1
+    model = Classify(arch=arch, att_layer=att_layer, nums_in=kwargs['nums_in'], nc=nc)
+
+    return model

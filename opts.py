@@ -38,6 +38,8 @@ class opts():
                                  help='save checkpoints')
         
         # dataset
+        self.parser.add_argument('--dataset', type=str, default='Online',
+                                 help='dataset used for training')
         self.parser.add_argument('--path', type=str, default='')
         self.parser.add_argument('--val-path', type=str, default='')
         self.parser.add_argument('--flip', type=float, default=0.5,

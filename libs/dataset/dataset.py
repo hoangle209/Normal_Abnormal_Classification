@@ -11,6 +11,13 @@ from ..utils.image import color_aug
 
 
 class GenericDataset(torch.utils.data.Dataset):
+    default_resolution = None
+    num_categories = -1
+    class_name = None
+    _valid_ids = None
+    cat_ids = None
+    labels = None
+
     mean = np.array([0.40789654, 0.44719302, 0.47026115],
                    dtype=np.float32).reshape(1, 1, 3)
     
@@ -26,17 +33,7 @@ class GenericDataset(torch.utils.data.Dataset):
             [-0.56089297, 0.71832671, 0.41158938]
         ], dtype=np.float32)
 
-    label_encoder_bce = {
-        'Abnormal': np.float32(0),
-        'Normal'  : np.float32(1)
-    }
-
-    label_encoder_ce = {
-        'Abnormal': np.array([1., 0.], dtype=np.float32),
-        'Normal'  : np.array([0., 1.], dtype=np.float32)
-    }
-
-    def __init__(self, path=None, opt=None, num_RGB=None, num_OptiF=None, num_Heat=None, split='train'):
+    def __init__(self, path=None, opt=None, num_RGB=None, num_Flow=None, num_Heat=None, split='train'):
         '''
             ../(abnormal | normal)/name_vid/sub_name_vid/image.jpg
         '''
@@ -51,7 +48,7 @@ class GenericDataset(torch.utils.data.Dataset):
         self.opt = opt
 
         self.num_rgb = 3 if num_RGB is None else num_RGB
-        self.num_optiF = 2 if num_OptiF is None else num_OptiF
+        self.num_Flow = 2 if num_Flow is None else num_Flow
         self.num_heat = 1 if num_Heat is None else num_Heat
         self._data_rng = np.random.RandomState(123)
 
@@ -98,7 +95,6 @@ class GenericDataset(torch.utils.data.Dataset):
         concat_img = (concat_img - self.mean[None, ...]) / self.std[None, ...]
         concat_img = concat_img.transpose(3, 0, 1, 2) # c x nums x h x w
         
-       # print('----concat shape', concat_img.shape)
         return concat_img
 
 
@@ -109,10 +105,8 @@ class GenericDataset(torch.utils.data.Dataset):
         label = sub_folder_path.split(os.sep)[-2]
         assert label in ['Abnormal', 'Normal']
         
-        if self.opt.loss == 'CE':
-            label = self.label_encoder_ce[label]
-        else:
-            label = self.label_encoder_bce[label]
+        label_idx = self.cat_ids[label]
+        label = self.labels[label_idx]
 
         infor = {
             'video': sub_folder_path.split(os.sep)[-1],
@@ -152,16 +146,20 @@ class GenericDataset(torch.utils.data.Dataset):
             rot_radian = (rot+180) / 180 * np.pi
             new_w = w*np.cos(rot_radian) + h*np.sin(rot_radian)
             new_h = w*np.sin(rot_radian) + h*np.cos(rot_radian)
+            
         return new_w, new_h
 
 
     def _augment(self, img_list, opt=None):
         num_imgs = len(img_list)
-        input_h, input_w = opt.input_h, opt.input_w
+        if opt.input_h < 0 or opt.input_w < 0:
+            input_h, input_w = self.default_resolution
+        else:
+            input_h, input_w = opt.input_h, opt.input_w 
+
         concat_img = np.zeros((num_imgs, input_h, input_w, 3), dtype=np.float32)
-
+        
         scale, rot = self._get_aug_param()
-
         if self.split == 'train':
             flip = np.random.rand() < opt.flip
             rotate = np.random.rand() < opt.rotate

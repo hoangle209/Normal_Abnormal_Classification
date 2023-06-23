@@ -14,7 +14,7 @@ import torch.nn.functional as F
 class BCELoss(nn.Module):
     def __init__(self):
         super().__init__()
-        self.bce = F.binary_cross_entropy()
+        self.bce = F.binary_cross_entropy(reduction='none')
     
     def forward(self, out, batch):
         b = out.size(0)
@@ -26,7 +26,7 @@ class BCELoss(nn.Module):
 class CELoss(nn.Module):
     def __init__(self, label_smoothing=0.0):
         super().__init__()
-        self.ce = nn.CrossEntropyLoss(label_smoothing=label_smoothing) 
+        self.ce = nn.CrossEntropyLoss(label_smoothing=label_smoothing, reduction='none') 
     
     def forward(self, out, batch):
         b = out.size(0)
