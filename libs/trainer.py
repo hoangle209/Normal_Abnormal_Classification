@@ -40,7 +40,7 @@ class ModelWithLoss(torch.nn.Module):
 
         loss = self.crit_label(out, batch['label'].detach())
         loss_stat = {
-            'label': loss
+            f'label_{self.opt.loss}': loss
         }
 
         return out, loss, loss_stat
@@ -75,7 +75,7 @@ class Trainer():
             model_with_loss.eval()
             torch.cuda.empty_cache()
 
-        avg_loss_stats = {'label': AverageMeter()}
+        avg_loss_stats = {f'label_{self.opt.loss}': AverageMeter()}
 
         max_iter = len(dataset)
         bar = Bar(f'Abnormal Classification', max=max_iter)

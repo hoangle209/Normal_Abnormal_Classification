@@ -48,7 +48,7 @@ class GenericDataset(torch.utils.data.Dataset):
         self.opt = opt
 
         self.num_rgb = 3 if num_RGB is None else num_RGB
-        self.num_Flow = 2 if num_Flow is None else num_Flow
+        self.num_flow = 2 if num_Flow is None else num_Flow
         self.num_heat = 1 if num_Heat is None else num_Heat
         self._data_rng = np.random.RandomState(123)
 

@@ -39,7 +39,7 @@ def main(opt):
         )
 
     # module_list = nn.ModuleList([])
-    nums_in = Dataset_train.num_RGB + Dataset_train.num_Flow + Dataset_train.num_Heat
+    nums_in = Dataset_train.num_rgb + Dataset_train.num_flow + Dataset_train.num_heat
     model = create_model(opt, nums_in=nums_in) # TODO
     optimizer = get_optimizer(opt, model)
     start_epoch = 0

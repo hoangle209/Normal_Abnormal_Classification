@@ -1,6 +1,6 @@
 import torch.nn as nn
 import torch.nn.functional as F
-# import torch
+import torch
 # from utils.general import check_version
 
 # def smartCrossEntropyLoss(label_smoothing=0.0):
@@ -36,3 +36,28 @@ class CELoss(nn.Module):
 
 
 
+def focal_loss(out, batch, alpha=1., gamma=2.):
+    b = out.size(0)
+
+    max_value, _ = batch.max(axis=-1, keepdim=True)
+    pos_ind = out.eq(max_value).float()
+    neg_ind = out.lt(max_value).float()
+
+    neg_weight = torch.pow(1-batch, 4)
+
+    loss = 0
+    pos_loss = torch.pow(1-out, gamma) * torch.log(out) * pos_ind
+    neg_loss = torch.pow(1-out, gamma) * torch.log(out) * neg_ind * neg_weight
+    loss = loss - (pos_loss + neg_loss)
+
+    return loss.sum() / b
+
+
+class FocalLoss(nn.Module):
+    def __init__(self, focal_loss):
+        super().__init__()
+        self.focal_loss = focal_loss
+    
+    def forward(self, out, batch):
+        loss = self.focal_loss(out, batch)
+        return loss
