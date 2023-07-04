@@ -21,9 +21,12 @@ class opts():
         self.parser.add_argument('--batch-size', type=int, default=8)
         self.parser.add_argument('--num-workers', type=int, default=2)
         self.parser.add_argument('--loss', type=str, default='CE', 
-                                 help='loss function, should be CE | BCE')
+                                 help='loss function, should be CE | BCE | focal')
+        self.parser.add_argument('--gamma', type=float, default=1.5,
+                                 help='gamma value for focal loss, if used')
         self.parser.add_argument('--label-smoothing', action='store_true')
-        self.parser.add_argument('--optim', type=str, default='SGD')
+        self.parser.add_argument('--optim', type=str, default='SGD',
+                                 help='optimizer SGD | Adam')
         self.parser.add_argument('--lr', type=float, default=1.25e-2)
         self.parser.add_argument('--lr-step',type=str, default='')
         self.parser.add_argument('--resume', action='store_true')
@@ -39,14 +42,15 @@ class opts():
         
         # dataset
         self.parser.add_argument('--dataset', type=str, default='Online',
-                                 help='dataset used for training')
+                                 help='dataset used for training, Online | MQ')
         self.parser.add_argument('--path', type=str, default='')
         self.parser.add_argument('--val-path', type=str, default='')
-        self.parser.add_argument('--flip', type=float, default=0.5,
+        self.parser.add_argument('--test-path', type=str, default='')
+        self.parser.add_argument('--flip', type=float, default=0.8,
                                  help='probability to vertical flip')
         self.parser.add_argument('--rotate', type=float, default=0.3,
                                  help='probability to rotate')
-        self.parser.add_argument('--color-aug', type=float, default=0.3,
+        self.parser.add_argument('--color-aug', type=float, default=0.8,
                                  help='color augmentation probability')
         self.parser.add_argument('--seed', type=int, default=5,
                                  help='seed')

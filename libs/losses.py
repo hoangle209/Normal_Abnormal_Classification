@@ -54,7 +54,7 @@ def focal_loss(out, batch, alpha=1., gamma=2.):
 
 
 class FocalLoss(nn.Module):
-    def __init__(self, focal_loss):
+    def __init__(self):
         super().__init__()
         self.focal_loss = focal_loss
     
